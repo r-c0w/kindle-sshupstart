@@ -1,0 +1,15 @@
+description "Kindle local-only firewall"
+
+start on started wifid
+stop on stopping wifid
+
+task
+
+script
+    iptables -F OUTPUT
+    iptables -P OUTPUT ACCEPT
+    iptables -A OUTPUT -o lo -j ACCEPT
+    iptables -A OUTPUT -d 127.0.0.1/32 -j ACCEPT
+    iptables -A OUTPUT -d @LAN_CIDR@ -j ACCEPT
+    iptables -A OUTPUT -j REJECT
+end script

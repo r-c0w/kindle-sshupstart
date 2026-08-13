@@ -1,0 +1,33 @@
+description "KOReader Dropbear SSH at boot"
+
+start on started wifid
+stop on stopping wifid
+
+respawn
+respawn limit 5 60
+
+script
+    DROPBEAR="@DROPBEAR@"
+    DROPBEAR_DIR="@DROPBEAR_DIR@"
+    PORT="@SSH_PORT@"
+
+    if [ ! -x "$DROPBEAR" ]; then
+        logger -t koreader-dropbear "Dropbear not found at $DROPBEAR"
+        stop
+    fi
+
+    mkdir -p "$DROPBEAR_DIR"
+    chmod 700 "$DROPBEAR_DIR"
+
+    exec "$DROPBEAR" \
+        -F \
+        -E \
+        -s \
+        -p "$PORT" \
+        -r "$DROPBEAR_DIR/dropbear_ed25519_host_key" \
+        -A \
+        -U 0 \
+        -G 0 \
+        -C root \
+        -d "$DROPBEAR_DIR/authorized_keys"
+end script
