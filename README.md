@@ -11,6 +11,16 @@ This project installs a small, reversible setup that:
 
 It does not include a jailbreak, exploit, firmware, Amazon registration bypass, or any Amazon credentials.
 
+## Tested Scope
+
+- Kindle Basic 2024 / 11th generation style device w/ MTP storage
+- Firmware 5.18.6
+- Vera/KPM jailbreak stack
+- KOReader v2026.07.1
+- KOReader bundled Dropbear
+- WPA2 Wi-Fi with a `192.168.1.0/24` or similar home LAN
+
+Other Kindle models, firmware versions, jailbreak stacks, and KOReader versions may work, but should be treated as untested until someone verifies them.
 
 ## Requirements
 
@@ -85,6 +95,26 @@ If your key is not loaded into your SSH agent:
 ssh -i ~/.ssh/your_key -p 2222 root@KINDLE_IP
 ```
 
+## Expected Status Output
+
+After installation, `status.sh` should show the Wi-Fi interface, the boot SSH job, and firewall rules similar to:
+
+```text
+--- network ---
+wlan0     Link encap:Ethernet  HWaddr ...
+          inet addr:192.168.1.42  Bcast:192.168.1.255  Mask:255.255.255.0
+
+--- ssh ---
+koreader-dropbear start/running, process 1234
+
+--- firewall ---
+-P OUTPUT ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -d 127.0.0.1/32 -j ACCEPT
+-A OUTPUT -d 192.168.1.0/24 -j ACCEPT
+-A OUTPUT -j REJECT --reject-with icmp-port-unreachable
+```
+
 ## Files Installed
 
 - `/etc/upstart/koreader-dropbear.conf`
@@ -111,6 +141,8 @@ If you lose SSH but USB/MTP storage is available, copy `scripts/emergency-restor
 
 Then reboot or wait for the jailbreak emergency hook to run it.
 
+The emergency script uses `192.168.1.0/24` by default. If your LAN uses a different subnet, edit the script before copying it, or set `LAN_CIDR` inside the script.
+
 ## Uninstall
 
 Run as root:
@@ -130,3 +162,11 @@ Do not run this on a device you do not own.
 This is not a substitute for a known-good jailbreak recovery path.
 
 Use at your own risk.
+
+## Known Risks
+
+- A wrong LAN CIDR can block SSH replies from reaching your computer.
+- A missing or moved KOReader Dropbear binary will prevent boot SSH from starting.
+- Firmware updates may change Upstart jobs, firewall behavior, or KOReader paths.
+- `internet-on-temporary.sh` intentionally allows outbound internet until disabled or rebooted.
+- If USB/MTP is unavailable and SSH is blocked, recovery may require device-specific jailbreak recovery steps.
